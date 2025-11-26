@@ -6,10 +6,11 @@ phases:
       nodejs: 20
     commands:
       - echo "Installing backend dependencies..."
+      - cd backend
       - npm install
   build:
     commands:
-      - echo "Build phase (no build step for Node backend)"
+      - echo "Backend build phase (no build step needed)"
 artifacts:
   files:
     - '**/*'
