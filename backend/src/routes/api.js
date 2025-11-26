@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const createPool = require('../db/mysql');
+const createPool = require('../db/mysql'); // your SSM-based MySQL pool
 
 // Get all authors
 router.get('/authors', async (req, res) => {
@@ -9,6 +9,7 @@ router.get('/authors', async (req, res) => {
     const [rows] = await db.query('SELECT * FROM author');
     res.json(rows);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -25,45 +26,39 @@ router.get('/books', async (req, res) => {
     `);
     res.json(rows);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Create Author
+// Create author
 router.post('/authors', async (req, res) => {
   const { name, birthday, bio } = req.body;
   try {
     const db = await createPool();
     const [result] = await db.query(
-      `INSERT INTO author (name, birthday, bio, createdAt, updatedAt)
-       VALUES (?, ?, ?, NOW(), NOW())`,
+      'INSERT INTO author (name, birthday, bio, createdAt, updatedAt) VALUES (?, ?, ?, NOW(), NOW())',
       [name, birthday, bio]
     );
     res.status(201).json({ id: result.insertId, name, birthday, bio });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Create Book
+// Create book
 router.post('/books', async (req, res) => {
   const { title, releaseDate, pages, description, authorId } = req.body;
   try {
     const db = await createPool();
     const [result] = await db.query(
-      `INSERT INTO book (title, releaseDate, pages, description, authorId, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
+      'INSERT INTO book (title, releaseDate, pages, description, authorId, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
       [title, releaseDate, pages, description, authorId]
     );
-    res.status(201).json({
-      id: result.insertId,
-      title,
-      releaseDate,
-      pages,
-      description,
-      authorId,
-    });
+    res.status(201).json({ id: result.insertId, title, releaseDate, pages, description, authorId });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
