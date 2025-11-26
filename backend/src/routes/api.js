@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db/mysql'); // THIS IS CORRECT
+const createPool = require('../db/mysql');
 
 // Get all authors
 router.get('/authors', async (req, res) => {
   try {
+    const db = await createPool();
     const [rows] = await db.query('SELECT * FROM author');
     res.json(rows);
   } catch (err) {
@@ -15,8 +16,12 @@ router.get('/authors', async (req, res) => {
 // Get all books
 router.get('/books', async (req, res) => {
   try {
+    const db = await createPool();
     const [rows] = await db.query(
-      'SELECT b.id, b.title, b.releaseDate, b.pages, b.description, a.name AS author FROM book b LEFT JOIN author a ON b.authorId = a.id'
+      `SELECT b.id, b.title, b.releaseDate, b.pages, b.description,
+              a.name AS author
+       FROM book b
+       LEFT JOIN author a ON b.authorId = a.id`
     );
     res.json(rows);
   } catch (err) {
@@ -24,12 +29,14 @@ router.get('/books', async (req, res) => {
   }
 });
 
-// Create author
+// Create Author
 router.post('/authors', async (req, res) => {
   const { name, birthday, bio } = req.body;
   try {
+    const db = await createPool();
     const [result] = await db.query(
-      'INSERT INTO author (name, birthday, bio, createdAt, updatedAt) VALUES (?, ?, ?, NOW(), NOW())',
+      `INSERT INTO author (name, birthday, bio, createdAt, updatedAt)
+       VALUES (?, ?, ?, NOW(), NOW())`,
       [name, birthday, bio]
     );
     res.status(201).json({ id: result.insertId, name, birthday, bio });
@@ -38,12 +45,14 @@ router.post('/authors', async (req, res) => {
   }
 });
 
-// Create book
+// Create Book
 router.post('/books', async (req, res) => {
   const { title, releaseDate, pages, description, authorId } = req.body;
   try {
+    const db = await createPool();
     const [result] = await db.query(
-      'INSERT INTO book (title, releaseDate, pages, description, authorId, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
+      `INSERT INTO book (title, releaseDate, pages, description, authorId, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
       [title, releaseDate, pages, description, authorId]
     );
     res.status(201).json({
