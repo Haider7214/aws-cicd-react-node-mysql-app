@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db/mysql');
+const createPool = require('../db/mysql');
 
 // Get all authors
 router.get('/authors', async (req, res) => {
   try {
+    const db = await createPool(); // get pool
     const [rows] = await db.query('SELECT * FROM author');
     res.json(rows);
   } catch (err) {
@@ -15,7 +16,10 @@ router.get('/authors', async (req, res) => {
 // Get all books
 router.get('/books', async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT b.id, b.title, b.releaseDate, b.pages, b.description, a.name AS author FROM book b LEFT JOIN author a ON b.authorId = a.id');
+    const db = await createPool();
+    const [rows] = await db.query(
+      'SELECT b.id, b.title, b.releaseDate, b.pages, b.description, a.name AS author FROM book b LEFT JOIN author a ON b.authorId = a.id'
+    );
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -26,7 +30,11 @@ router.get('/books', async (req, res) => {
 router.post('/authors', async (req, res) => {
   const { name, birthday, bio } = req.body;
   try {
-    const [result] = await db.query('INSERT INTO author (name, birthday, bio, createdAt, updatedAt) VALUES (?, ?, ?, NOW(), NOW())', [name, birthday, bio]);
+    const db = await createPool();
+    const [result] = await db.query(
+      'INSERT INTO author (name, birthday, bio, createdAt, updatedAt) VALUES (?, ?, ?, NOW(), NOW())',
+      [name, birthday, bio]
+    );
     res.status(201).json({ id: result.insertId, name, birthday, bio });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -37,7 +45,11 @@ router.post('/authors', async (req, res) => {
 router.post('/books', async (req, res) => {
   const { title, releaseDate, pages, description, authorId } = req.body;
   try {
-    const [result] = await db.query('INSERT INTO book (title, releaseDate, pages, description, authorId, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, NOW(), NOW())', [title, releaseDate, pages, description, authorId]);
+    const db = await createPool();
+    const [result] = await db.query(
+      'INSERT INTO book (title, releaseDate, pages, description, authorId, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
+      [title, releaseDate, pages, description, authorId]
+    );
     res.status(201).json({ id: result.insertId, title, releaseDate, pages, description, authorId });
   } catch (err) {
     res.status(500).json({ error: err.message });
