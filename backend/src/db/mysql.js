@@ -1,15 +1,49 @@
 const mysql = require('mysql2');
-require('dotenv').config();
+const AWS = require('aws-sdk');
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+// Configure AWS region
+AWS.config.update({ region: 'ap-south-1' }); // change region if needed
 
-module.exports = pool.promise();
+const ssm = new AWS.SSM();
+
+async function getDbParams() {
+  const paramNames = [
+    '/nodeapp/db/hostname',
+    '/nodeapp/db/user',
+    '/nodeapp/db/password',
+    '/nodeapp/db/name',
+    '/nodeapp/db/port'
+  ];
+
+  const data = await ssm.getParameters({
+    Names: paramNames,
+    WithDecryption: true
+  }).promise();
+
+  const params = {};
+  data.Parameters.forEach(p => {
+    const key = p.Name.split('/').pop(); // use last part as key
+    params[key] = p.Value;
+  });
+
+  return params;
+}
+
+async function createPool() {
+  const dbParams = await getDbParams();
+
+  const pool = mysql.createPool({
+    host: dbParams.hostname,
+    user: dbParams.user,
+    password: dbParams.password,
+    database: dbParams.name,
+    port: dbParams.port,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+  });
+
+  return pool.promise();
+}
+
+module.exports = createPool;
