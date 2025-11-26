@@ -17,12 +17,12 @@ router.get('/authors', async (req, res) => {
 router.get('/books', async (req, res) => {
   try {
     const db = await createPool();
-    const [rows] = await db.query(
-      `SELECT b.id, b.title, b.releaseDate, b.pages, b.description,
-              a.name AS author
-       FROM book b
-       LEFT JOIN author a ON b.authorId = a.id`
-    );
+    const [rows] = await db.query(`
+      SELECT b.id, b.title, b.releaseDate, b.pages, b.description,
+             a.name AS author
+      FROM book b
+      LEFT JOIN author a ON b.authorId = a.id
+    `);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
