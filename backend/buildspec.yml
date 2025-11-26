@@ -1,0 +1,16 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "Installing backend dependencies..."
+      - npm install
+  build:
+    commands:
+      - echo "Build phase (no build step for Node backend)"
+artifacts:
+  files:
+    - '**/*'
+    - '!node_modules/**'
